@@ -5,12 +5,16 @@ use std::env;
 async fn main() -> monzo::Result<()> {
     let token = env::var("MONZO_ACCESS_TOKEN").expect("$MONZO_ACCESS_TOKEN is not set");
 
-    let client = Client::new(token).with_url("http://foo.bar.nope.not-a-thing");
+    // let client = Client::new(token).with_url("http://foo.bar.nope.not-a-thing");
+    let client = Client::new(token);
 
     let accounts = client.accounts().await?;
     dbg!(&accounts);
 
     let account_id = &accounts[1].id;
+
+    let pots = client.pots(account_id).await?;
+    dbg!(&pots);
 
     let balance = client.balance(account_id).await?;
     dbg!(&balance);
