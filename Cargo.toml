@@ -1,0 +1,20 @@
+[package]
+name = "finops-monzo"
+version = "0.1.0"
+authors = ["Dewald Viljoen <dv@dewaldv.com>"]
+edition = "2021"
+description = "Monzo CLI for automating finance bits."
+readme = "README.md"
+keywords = ["monzo", "mondo", "async", "finops"]
+homepage = "https://github.com/dewaldv/finops-monzo"
+repository = "https://github.com/dewaldv/finops-monzo"
+license = "MIT"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# monzo-lib = "0.4.4"
+# mozno-lib = { git = "https://github.com/DewaldV/monzo-lib.git" }
+monzo-lib = { path = "../monzo-lib" }
+tokio = { version = "1", features = ["full"] }
