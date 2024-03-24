@@ -1,8 +1,20 @@
 use monzo::Client;
 use std::env;
+use clap::{Parser, Subcommand};
 
 #[tokio::main]
 async fn main() -> monzo::Result<()> {
+    let args = CLI::parse();
+
+    match args.command {
+        Commands::Balance => {
+            balance().await?;
+        }
+    }
+    Ok(())
+}
+
+async fn balance() -> monzo::Result<()> {
     let token = env::var("MONZO_ACCESS_TOKEN").expect("$MONZO_ACCESS_TOKEN is not set");
 
     // let client = Client::new(token).with_url("http://foo.bar.nope.not-a-thing");
@@ -20,4 +32,17 @@ async fn main() -> monzo::Result<()> {
     dbg!(&balance);
 
     Ok(())
+}
+
+#[derive(Parser)]
+#[command(name = "monzo")]
+#[command(about = "A CLI for Monzo Finops", long_about = None)]
+struct CLI {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Balance
 }
