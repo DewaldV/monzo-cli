@@ -1,5 +1,4 @@
 use monzo::Client;
-use std::env;
 use clap::{Parser, Subcommand};
 
 #[tokio::main]
@@ -8,28 +7,41 @@ async fn main() -> monzo::Result<()> {
 
     match args.command {
         Commands::Balance => {
-            balance().await?;
+            balance(args.monzo_access_token).await?;
+        }
+        Commands::Pots => {
+            pots(args.monzo_access_token).await?;
         }
     }
     Ok(())
 }
 
-async fn balance() -> monzo::Result<()> {
-    let token = env::var("MONZO_ACCESS_TOKEN").expect("$MONZO_ACCESS_TOKEN is not set");
-
-    // let client = Client::new(token).with_url("http://foo.bar.nope.not-a-thing");
+async fn balance(token: impl Into<String>) -> monzo::Result<()> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
-    dbg!(&accounts);
 
+    let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| a.account_number != "").collect();
+
+    for account in accounts_with_balances.iter() {
+        let balance = client.balance(&account.id).await?;
+        dbg!(&account.account_type);
+        dbg!(&balance);
+    }
+
+    Ok(())
+}
+
+async fn pots(token: impl Into<String>) -> monzo::Result<()> {
+    let client = Client::new(token);
+
+    let accounts = client.accounts().await?;
     let account_id = &accounts[1].id;
-
     let pots = client.pots(account_id).await?;
-    dbg!(&pots);
 
-    let balance = client.balance(account_id).await?;
-    dbg!(&balance);
+    let active_pots: Vec<&monzo::Pot> = pots.iter().filter(|p| !p.deleted).collect();
+
+    dbg!(&active_pots);
 
     Ok(())
 }
@@ -38,11 +50,15 @@ async fn balance() -> monzo::Result<()> {
 #[command(name = "monzo")]
 #[command(about = "A CLI for Monzo Finops", long_about = None)]
 struct CLI {
+    #[clap(long, env, hide_env_values(true))]
+    monzo_access_token: String,
+
     #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    Balance
+    Balance,
+    Pots,
 }
