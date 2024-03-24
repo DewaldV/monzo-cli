@@ -14,7 +14,7 @@
         devShells.default = mkShell rec {
           nativeBuildInputs = [
             pkg-config
-            rust-bin.stable.latest.default
+            rust-bin.stable.latest.complete
             clang
             mold
 
