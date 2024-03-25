@@ -1,6 +1,23 @@
 use monzo::Client;
 use clap::{Parser, Subcommand};
 
+#[derive(Parser)]
+#[command(name = "monzo")]
+#[command(about = "A CLI for Monzo Finops", long_about = None)]
+struct CLI {
+    #[clap(long, env, hide_env_values(true))]
+    monzo_access_token: String,
+
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Balance,
+    Pots,
+}
+
 #[tokio::main]
 async fn main() -> monzo::Result<()> {
     let args = CLI::parse();
@@ -45,21 +62,4 @@ async fn pots(token: impl Into<String>) -> monzo::Result<()> {
     }
 
     Ok(())
-}
-
-#[derive(Parser)]
-#[command(name = "monzo")]
-#[command(about = "A CLI for Monzo Finops", long_about = None)]
-struct CLI {
-    #[clap(long, env, hide_env_values(true))]
-    monzo_access_token: String,
-
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Balance,
-    Pots,
 }
