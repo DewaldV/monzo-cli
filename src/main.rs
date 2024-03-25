@@ -38,7 +38,7 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
 
     let accounts = client.accounts().await?;
 
-    let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| a.account_number.is_empty()).collect();
+    let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
 
     for account in accounts_with_balances.iter() {
         let balance = client.balance(&account.id).await?;
