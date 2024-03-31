@@ -45,6 +45,7 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
     let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
 
     print_balance_row("Account Type", "Created", "Balance");
+    println!("---------------|--------------|---------");
 
     for account in accounts_with_balances.iter() {
         let account_type = match account.account_type {
@@ -63,7 +64,6 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
 }
 
 async fn pots(token: impl Into<String>) -> monzo::Result<()> {
-
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
