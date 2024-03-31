@@ -33,6 +33,10 @@ async fn main() -> monzo::Result<()> {
     Ok(())
 }
 
+fn print_balance_row(account_type: &str, created: &str, balance: &str) {
+    println!("{:<14} | {:<12} | {:>8}", account_type, created, balance);
+}
+
 async fn balance(token: impl Into<String>) -> monzo::Result<()> {
     let client = Client::new(token);
 
@@ -40,16 +44,26 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
 
     let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
 
+    print_balance_row("Account Type", "Created", "Balance");
+
     for account in accounts_with_balances.iter() {
+        let account_type = match account.account_type {
+            monzo::accounts::Type::UkRetail => "Personal",
+            monzo::accounts::Type::UkRetailJoint => "Joint",
+            _ => "Other"
+        };
+
+        let created = account.created.format("%Y-%m-%d").to_string();
         let balance = client.balance(&account.id).await?;
-        dbg!(&account.account_type);
-        dbg!(&balance);
+        let balance_value = balance.balance.to_string();
+        print_balance_row(account_type, created.as_str(), balance_value.as_str());
     }
 
     Ok(())
 }
 
 async fn pots(token: impl Into<String>) -> monzo::Result<()> {
+
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
