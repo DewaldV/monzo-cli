@@ -1,6 +1,8 @@
 use monzo::Client;
 use clap::{Parser, Subcommand};
 
+mod currency;
+
 #[derive(Parser)]
 #[command(name = "monzo")]
 #[command(about = "A CLI for Monzo Finops", long_about = None)]
@@ -34,7 +36,7 @@ async fn main() -> monzo::Result<()> {
 }
 
 fn print_balance_row(account_type: &str, created: &str, balance: &str) {
-    println!("{:<14} | {:<12} | {:>8}", account_type, created, balance);
+    println!("{:<14} | {:<12} | {:>12}", account_type, created, balance);
 }
 
 async fn balance(token: impl Into<String>) -> monzo::Result<()> {
@@ -45,7 +47,7 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
     let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
 
     print_balance_row("Account Type", "Created", "Balance");
-    println!("---------------|--------------|---------");
+    println!("---------------|--------------|-------------");
 
     for account in accounts_with_balances.iter() {
         let account_type = match account.account_type {
@@ -56,7 +58,7 @@ async fn balance(token: impl Into<String>) -> monzo::Result<()> {
 
         let created = account.created.format("%Y-%m-%d").to_string();
         let balance = client.balance(&account.id).await?;
-        let balance_value = balance.balance.to_string();
+        let balance_value = currency::format_currency(balance.balance);
         print_balance_row(account_type, created.as_str(), balance_value.as_str());
     }
 
