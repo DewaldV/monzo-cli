@@ -44,7 +44,7 @@ pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> monzo::Result
             println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
         },
         None => {
-            println!("No pots matched");
+            println!("No pot found with name: {}", pot_name);
         }
     }
 
