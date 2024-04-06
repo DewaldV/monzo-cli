@@ -1,12 +1,37 @@
+use std::num::ParseIntError;
+
+pub fn format_currency(pence: i64) -> String {
+    let mut out: String = String::new();
+
+    for (i, c) in pence.to_string().chars().rev().enumerate() {
+        if i == 2 {
+            out.push('.');
+        }
+
+        if i > 2 && (i - 2) % 3 == 0 {
+            out.push(',');
+        }
+
+        out.push(c);
+    }
+
+    out.chars().rev().collect()
+}
+
+pub fn parse_currency(value: &str) -> Result<u32, ParseIntError> {
+    let cleaned_value = value.replace(&['.', ','], "");
+    cleaned_value.parse()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
     fn format_currency_decimals() {
-        let pence: i64 = 890;
+        let pence = 890;
 
-        let value: String = format_currency(pence);
+        let value = format_currency(pence);
 
         assert_eq!(value, "8.90")
     }
@@ -14,6 +39,7 @@ mod test {
     #[test]
     fn format_currency_separators() {
         let cases = [
+            (12345, "123.45"),
             (654321, "6,543.21"),
             (500000035, "5,000,000.35"),
             (953578513525, "9,535,785,135.25"),
@@ -25,22 +51,22 @@ mod test {
             assert_eq!(value, expected);
         }
     }
-}
 
-pub fn format_currency(pence: i64) -> String {
-    let mut out: String = String::new();
+    #[test]
+    fn parse_currency_decimals() {
+        let value = "10.05";
 
-    for (i, c) in pence.to_string().chars().rev().enumerate() {
-        if i == 2 {
-            out.push('.')
-        }
+        let pence = parse_currency(value);
 
-        if i > 2 && (i - 2) % 3 == 0 {
-            out.push(',')
-        }
-
-        out.push(c)
+        assert_eq!(pence, Ok(1005));
     }
 
-    out.chars().rev().collect()
+    #[test]
+    fn parse_currency_separators() {
+        let value = "1,010.05";
+
+        let pence = parse_currency(value);
+
+        assert_eq!(pence, Ok(101005));
+    }
 }

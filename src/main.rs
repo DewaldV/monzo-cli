@@ -1,7 +1,8 @@
-use monzo::Client;
 use clap::{Parser, Subcommand};
 
+mod accounts;
 mod currency;
+mod pots;
 
 #[derive(Parser)]
 #[command(name = "monzo")]
@@ -25,8 +26,12 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum PotsCommands {
-    Balances {
+    Balance {
         name: Option<String>
+    },
+    Deposit {
+        name: String,
+        value: String,
     },
 }
 
@@ -36,72 +41,18 @@ async fn main() -> monzo::Result<()> {
 
     match args.cmd {
         Commands::Balance => {
-            balance(args.monzo_access_token).await?;
+            accounts::balance(&args.monzo_access_token).await?;
         }
         Commands::Pots{ pot_cmd } => {
             match pot_cmd {
-                PotsCommands::Balances { name: _ } => {
-                    pots(args.monzo_access_token).await?;
+                PotsCommands::Balance { name: _ } => {
+                    pots::balance(&args.monzo_access_token).await?;
+                }
+                PotsCommands::Deposit { name, value } => {
+                    pots::deposit(&args.monzo_access_token, &name, &value).await?;
                 }
             }
         }
     }
-    Ok(())
-}
-
-fn print_balance_row(account_type: &str, account_no: &str, created: &str, balance: &str) {
-    println!("{:<14}   {:<14}   {:<12}   {:>12}", account_type, account_no, created, balance);
-}
-
-fn map_account_type(account_type: &monzo::accounts::Type) -> &str {
-   match account_type {
-        monzo::accounts::Type::UkRetail => "Personal",
-        monzo::accounts::Type::UkRetailJoint => "Joint",
-        _ => "Other"
-    }
-}
-
-async fn balance(token: impl Into<String>) -> monzo::Result<()> {
-    let client = Client::new(token);
-
-    let accounts = client.accounts().await?;
-    let accounts_with_balances: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
-
-    print_balance_row("Account Type", "Account No", "Created", "Balance");
-    println!("-------------------------------------------------------------");
-
-    for account in accounts_with_balances.iter() {
-        let account_type = map_account_type(&account.account_type);
-        let created = account.created.format("%Y-%m-%d").to_string();
-        let balance = client.balance(&account.id).await?;
-        let balance_value = currency::format_currency(balance.balance);
-        print_balance_row(account_type, &account.account_number, &created, &balance_value);
-    }
-
-    Ok(())
-}
-
-fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, balance: &str) {
-    println!("{:<14}   {:<14}   {:<30}   {:>12}", account_type, account_no, pot_name, balance);
-}
-
-async fn pots(token: impl Into<String>) -> monzo::Result<()> {
-    let client = Client::new(token);
-
-    let accounts = client.accounts().await?;
-    let accounts_with_pots: Vec<&monzo::Account> = accounts.iter().filter(|a| !a.account_number.is_empty()).collect();
-
-    print_pot_balance_row("Account Type", "Account Number", "Pot Name", "Balance");
-    println!("-------------------------------------------------------------------------------");
-    for account in accounts_with_pots.iter() {
-        let pots = client.pots(&account.id).await?;
-        let active_pots: Vec<&monzo::Pot> = pots.iter().filter(|p| !p.deleted).collect();
-        let account_type = map_account_type(&account.account_type);
-        for pot in active_pots.iter() {
-            let balance_value = currency::format_currency(pot.balance);
-            print_pot_balance_row(account_type, &account.account_number, &pot.name, &balance_value);
-        }
-    }
-
     Ok(())
 }
