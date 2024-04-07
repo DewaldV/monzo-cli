@@ -1,0 +1,25 @@
+name: Cargo Build & Test
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    name: Rust Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
+
+      - name: "Build"
+        run: cargo build --verbose
+
+      - name: "Test"
+        run: cargo test --verbose
