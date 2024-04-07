@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 mod accounts;
 mod currency;
 mod pots;
+mod transactions;
 
 #[derive(Parser)]
 #[command(name = "monzo")]
@@ -17,22 +18,34 @@ struct CLI {
 
 #[derive(Subcommand)]
 enum Commands {
-    Balance,
+    Accounts {
+        #[command(subcommand)]
+        acc_cmd: AccountCommands,
+    },
     Pots {
         #[command(subcommand)]
         pot_cmd: PotsCommands,
     },
+    Transactions {
+        #[command(subcommand)]
+        tx_cmd: TransactionCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum AccountCommands {
+    List,
 }
 
 #[derive(Subcommand)]
 enum PotsCommands {
-    Balance {
-        name: Option<String>
-    },
-    Deposit {
-        name: String,
-        value: String,
-    },
+    List { name: Option<String> },
+    Deposit { name: String, value: String },
+}
+
+#[derive(Subcommand)]
+enum TransactionCommands {
+    List { account_type: Option<String> },
 }
 
 #[tokio::main]
@@ -40,19 +53,22 @@ async fn main() -> monzo::Result<()> {
     let args = CLI::parse();
 
     match args.cmd {
-        Commands::Balance => {
-            accounts::balance(&args.monzo_access_token).await?;
-        }
-        Commands::Pots{ pot_cmd } => {
-            match pot_cmd {
-                PotsCommands::Balance { name: _ } => {
-                    pots::balance(&args.monzo_access_token).await?;
-                }
-                PotsCommands::Deposit { name, value } => {
-                    pots::deposit(&args.monzo_access_token, &name, &value).await?;
-                }
+        Commands::Accounts { acc_cmd } => match acc_cmd {
+            AccountCommands::List => {
+                accounts::balance(&args.monzo_access_token).await?;
             }
-        }
+        },
+        Commands::Pots { pot_cmd } => match pot_cmd {
+            PotsCommands::List { name: _ } => {
+                pots::balance(&args.monzo_access_token).await?;
+            }
+            PotsCommands::Deposit { name, value } => {
+                pots::deposit(&args.monzo_access_token, &name, &value).await?;
+            }
+        },
+        Commands::Transactions { tx_cmd } => match tx_cmd {
+            TransactionCommands::List { account_type: _ } => {}
+        },
     }
     Ok(())
 }
