@@ -17,7 +17,7 @@ pub async fn list(token: &str, account_type: accounts::Type) -> monzo::Result<()
             println!("Transactions for account: {}", account_type.value());
             println!("");
             print_transaction_row("Created", "Category", "Description", "Amount");
-            println!("-------------------------------------------------------------");
+            println!("-----------------------------------------------------------------------------------------------------------");
 
             let transactions = client
                 .transactions(&acc.id)
@@ -42,7 +42,7 @@ pub async fn list(token: &str, account_type: accounts::Type) -> monzo::Result<()
 
 fn print_transaction_row(created: &str, category: &str, description: &str, amount: &str) {
     println!(
-        "{:<12}   {:<14}   {:<30}   {:>12}",
+        "{:<12}   {:<14}   {:<60}   {:>12}",
         created, category, description, amount
     );
 }
