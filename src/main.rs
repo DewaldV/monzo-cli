@@ -45,7 +45,7 @@ enum PotsCommands {
 
 #[derive(Subcommand)]
 enum TransactionCommands {
-    List { account_type: Option<String> },
+    List { account_type: accounts::Type },
 }
 
 #[tokio::main]
@@ -55,19 +55,21 @@ async fn main() -> monzo::Result<()> {
     match args.cmd {
         Commands::Accounts { acc_cmd } => match acc_cmd {
             AccountCommands::List => {
-                accounts::balance(&args.monzo_access_token).await?;
+                accounts::list(&args.monzo_access_token).await?;
             }
         },
         Commands::Pots { pot_cmd } => match pot_cmd {
             PotsCommands::List { name: _ } => {
-                pots::balance(&args.monzo_access_token).await?;
+                pots::list(&args.monzo_access_token).await?;
             }
             PotsCommands::Deposit { name, value } => {
                 pots::deposit(&args.monzo_access_token, &name, &value).await?;
             }
         },
         Commands::Transactions { tx_cmd } => match tx_cmd {
-            TransactionCommands::List { account_type: _ } => {}
+            TransactionCommands::List { account_type } => {
+                transactions::list(&args.monzo_access_token, account_type).await?;
+            }
         },
     }
     Ok(())
