@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{prelude::*, Duration};
 use monzo::Client;
 
@@ -29,13 +31,36 @@ pub async fn list(token: &str, account_type: accounts::Type) -> monzo::Result<()
             for tx in transactions.iter() {
                 let created = &tx.created.format("%Y-%m-%d").to_string();
                 let amount = &currency::format_currency(tx.amount);
-                print_transaction_row(created, &tx.category, &tx.description, amount);
+                print_transaction_row(created, &tx.category, &tx.id, amount);
             }
         }
         None => {
             println!("No account found for type: {}", account_type.value());
         }
     }
+
+    Ok(())
+}
+
+pub async fn annotate(token: &str, transaction_id: &str) -> monzo::Result<()> {
+    let client = Client::new(token);
+
+    let metadata = HashMap::from([(
+        String::from("notes"),
+        String::from("test annotations again"),
+    )]);
+
+    let tx = client
+        .annotate_transaction(transaction_id, metadata)
+        .await?;
+
+    println!("Annotation added.");
+    println!("");
+    let created = &tx.created.format("%Y-%m-%d").to_string();
+    let amount = &currency::format_currency(tx.amount);
+    print_transaction_row("Created", "Category", "Description", "Amount");
+    println!("-----------------------------------------------------------------------------------------------------------");
+    print_transaction_row(created, &tx.category, &tx.description, amount);
 
     Ok(())
 }
