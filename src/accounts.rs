@@ -58,7 +58,7 @@ pub async fn get_supported_accounts(
             Ok(acc_type) => Some((acc_type, acc.clone())),
             Err(_) => None,
         })
-        .filter(|a| !a.1.account_number.is_empty())
+        .filter(|acc| !acc.1.account_number.is_empty())
         .collect();
 
     Ok(supported_accounts)

@@ -20,7 +20,7 @@ pub async fn list(token: &str) -> monzo::Result<()> {
     for (account_type, account) in supported_accounts {
         let pots = client.pots(&account.id).await?;
 
-        for pot in pots.iter().filter(|p| !p.deleted) {
+        for pot in pots.iter().filter(|pot| !pot.deleted) {
             let balance_value = currency::format_currency(pot.balance);
             print_pot_balance_row(
                 &account_type.value(),
@@ -70,7 +70,7 @@ async fn find_pot(token: &str, name: &str) -> monzo::Result<Option<monzo::Pot>> 
         let pots = client.pots(&account.id).await?;
         let found_pot = pots
             .iter()
-            .find(|p| !p.deleted && p.name.to_lowercase() == name.to_lowercase());
+            .find(|pot| !pot.deleted && pot.name.to_lowercase() == name.to_lowercase());
         if found_pot.is_some() {
             return Ok(found_pot.cloned());
         }
