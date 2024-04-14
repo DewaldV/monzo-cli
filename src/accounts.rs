@@ -3,37 +3,37 @@ use monzo::Client;
 use crate::currency;
 
 #[derive(PartialEq, clap::ValueEnum, Clone, Copy)]
-pub enum Type {
+pub enum AccountType {
     Personal,
     Joint,
 }
 
-impl Type {
+impl AccountType {
     pub fn value(self) -> String {
         match self {
-            Type::Personal => String::from("Personal"),
-            Type::Joint => String::from("Joint"),
+            AccountType::Personal => String::from("Personal"),
+            AccountType::Joint => String::from("Joint"),
         }
     }
 }
 
-impl TryFrom<&monzo::accounts::Type> for Type {
+impl TryFrom<&monzo::accounts::Type> for AccountType {
     type Error = String;
 
     fn try_from(value: &monzo::accounts::Type) -> Result<Self, Self::Error> {
         match value {
-            monzo::accounts::Type::UkRetail => Ok(Type::Personal),
-            monzo::accounts::Type::UkRetailJoint => Ok(Type::Joint),
+            monzo::accounts::Type::UkRetail => Ok(AccountType::Personal),
+            monzo::accounts::Type::UkRetailJoint => Ok(AccountType::Joint),
             _ => Err(String::from("Unsupported account type")),
         }
     }
 }
 
-impl Into<monzo::accounts::Type> for Type {
+impl Into<monzo::accounts::Type> for AccountType {
     fn into(self) -> monzo::accounts::Type {
         match self {
-            Type::Personal => monzo::accounts::Type::UkRetail,
-            Type::Joint => monzo::accounts::Type::UkRetailJoint,
+            AccountType::Personal => monzo::accounts::Type::UkRetail,
+            AccountType::Joint => monzo::accounts::Type::UkRetailJoint,
         }
     }
 }
@@ -45,14 +45,16 @@ fn print_balance_row(account_type: &str, account_no: &str, created: &str, balanc
     );
 }
 
-pub async fn get_supported_accounts(token: &str) -> monzo::Result<Vec<(Type, monzo::Account)>> {
+pub async fn get_supported_accounts(
+    token: &str,
+) -> monzo::Result<Vec<(AccountType, monzo::Account)>> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
 
     let supported_accounts = accounts
         .iter()
-        .filter_map(|acc| match Type::try_from(&acc.account_type) {
+        .filter_map(|acc| match AccountType::try_from(&acc.account_type) {
             Ok(acc_type) => Some((acc_type, acc.clone())),
             Err(_) => None,
         })

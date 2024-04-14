@@ -46,7 +46,7 @@ enum PotsCommands {
 #[derive(Subcommand)]
 enum TransactionCommands {
     List {
-        account_type: accounts::Type,
+        account_type: accounts::AccountType,
     },
     UpdateNote {
         transaction_id: String,

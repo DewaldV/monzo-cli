@@ -6,7 +6,7 @@ use monzo::Client;
 use crate::accounts;
 use crate::currency;
 
-pub async fn list(token: &str, account_type: accounts::Type) -> monzo::Result<()> {
+pub async fn list(token: &str, account_type: accounts::AccountType) -> monzo::Result<()> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
