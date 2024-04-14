@@ -51,15 +51,16 @@ pub async fn list(token: &str) -> monzo::Result<()> {
     let accounts = client.accounts().await?;
     let supported_accounts = accounts
         .iter()
-        .filter(|acc| Type::try_from(&acc.account_type).is_ok())
-        .filter(|acc| !acc.account_number.is_empty());
+        .filter_map(|acc| match Type::try_from(&acc.account_type).ok() {
+            Some(a) => Some((a, acc)),
+            None => None,
+        })
+        .filter(|a| !a.1.account_number.is_empty());
 
     print_balance_row("Account Type", "Account No", "Created", "Balance");
     println!("-------------------------------------------------------------");
 
-    for account in supported_accounts {
-        let account_type = Type::try_from(&account.account_type)
-            .expect("already filtered for account types that converted successfully");
+    for (account_type, account) in supported_accounts {
         let created = account.created.format("%Y-%m-%d").to_string();
         let balance = client.balance(&account.id).await?;
         let balance_value = currency::format_currency(balance.balance);
