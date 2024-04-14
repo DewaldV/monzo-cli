@@ -12,7 +12,7 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> monzo::Re
     let accounts = client.accounts().await?;
     let found_account = accounts
         .iter()
-        .find(|acc| acc.account_type == Into::<monzo::accounts::Type>::into(account_type));
+        .find(|acc| acc.account_type == account_type.into());
 
     match found_account {
         Some(acc) => {
