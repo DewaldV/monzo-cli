@@ -13,15 +13,11 @@ fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, b
 pub async fn list(token: &str) -> monzo::Result<()> {
     let client = Client::new(token);
 
-    let accounts = client.accounts().await?;
-    let supported_accounts = accounts.iter().filter(|acc| !acc.account_number.is_empty());
+    let supported_accounts = accounts::get_supported_accounts(token).await?;
 
     print_pot_balance_row("Account Type", "Account Number", "Pot Name", "Balance");
     println!("-------------------------------------------------------------------------------");
-    for account in supported_accounts {
-        let account_type = accounts::Type::try_from(&account.account_type)
-            .expect("already filtered for account types that converted successfully");
-
+    for (account_type, account) in supported_accounts {
         let pots = client.pots(&account.id).await?;
 
         for pot in pots.iter().filter(|p| !p.deleted) {
@@ -43,8 +39,7 @@ pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> monzo::Result
 
     let client = Client::new(token);
 
-    let accounts = client.accounts().await?;
-    let found_pot = find_pot(token, pot_name, &accounts).await?;
+    let found_pot = find_pot(token, pot_name).await?;
 
     match found_pot {
         Some(pot) => {
@@ -66,14 +61,12 @@ pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> monzo::Result
     Ok(())
 }
 
-async fn find_pot(
-    token: &str,
-    name: &str,
-    accounts: &Vec<monzo::Account>,
-) -> monzo::Result<Option<monzo::Pot>> {
+async fn find_pot(token: &str, name: &str) -> monzo::Result<Option<monzo::Pot>> {
     let client = Client::new(token);
 
-    for account in accounts.iter().filter(|acc| !acc.account_number.is_empty()) {
+    let supported_accounts = accounts::get_supported_accounts(token).await?;
+
+    for (_, account) in supported_accounts {
         let pots = client.pots(&account.id).await?;
         let found_pot = pots
             .iter()
