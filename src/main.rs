@@ -45,8 +45,13 @@ enum PotsCommands {
 
 #[derive(Subcommand)]
 enum TransactionCommands {
-    List { account_type: accounts::Type },
-    Annotate { transaction_id: String },
+    List {
+        account_type: accounts::Type,
+    },
+    UpdateNote {
+        transaction_id: String,
+        note: String,
+    },
 }
 
 #[tokio::main]
@@ -71,8 +76,11 @@ async fn main() -> monzo::Result<()> {
             TransactionCommands::List { account_type } => {
                 transactions::list(&args.monzo_access_token, account_type).await?;
             }
-            TransactionCommands::Annotate { transaction_id } => {
-                transactions::annotate(&args.monzo_access_token, &transaction_id).await?;
+            TransactionCommands::UpdateNote {
+                transaction_id,
+                note,
+            } => {
+                transactions::annotate(&args.monzo_access_token, &transaction_id, note).await?;
             }
         },
     }

@@ -612,6 +612,7 @@ dependencies = [
 [[package]]
 name = "monzo-lib"
 version = "0.4.4"
+source = "git+https://github.com/DewaldV/monzo-lib.git#2da63b95a0137b2a1e08763b0fdb0f30b8760a96"
 dependencies = [
  "chrono",
  "erased-serde",

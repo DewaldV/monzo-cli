@@ -42,25 +42,22 @@ pub async fn list(token: &str, account_type: accounts::Type) -> monzo::Result<()
     Ok(())
 }
 
-pub async fn annotate(token: &str, transaction_id: &str) -> monzo::Result<()> {
+pub async fn annotate(token: &str, transaction_id: &str, note: String) -> monzo::Result<()> {
     let client = Client::new(token);
 
-    let metadata = HashMap::from([(
-        String::from("notes"),
-        String::from("test annotations again"),
-    )]);
+    let metadata = HashMap::from([(String::from("notes"), note)]);
 
     let tx = client
         .annotate_transaction(transaction_id, metadata)
         .await?;
 
-    println!("Annotation added.");
+    println!("Note added.");
     println!("");
     let created = &tx.created.format("%Y-%m-%d").to_string();
     let amount = &currency::format_currency(tx.amount);
-    print_transaction_row("Created", "Category", "Description", "Amount");
+    print_transaction_row("Created", "Category", "Note", "Amount");
     println!("-----------------------------------------------------------------------------------------------------------");
-    print_transaction_row(created, &tx.category, &tx.description, amount);
+    print_transaction_row(created, &tx.category, &tx.notes, amount);
 
     Ok(())
 }
