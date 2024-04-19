@@ -1,7 +1,10 @@
 use clap::{Parser, Subcommand};
+use error::Result;
 
 mod accounts;
+mod batch;
 mod currency;
+mod error;
 mod pots;
 mod transactions;
 
@@ -22,6 +25,10 @@ enum Commands {
         #[command(subcommand)]
         acc_cmd: AccountCommands,
     },
+    Batch {
+        #[command(subcommand)]
+        batch_cmd: BatchCommands,
+    },
     Pots {
         #[command(subcommand)]
         pot_cmd: PotsCommands,
@@ -35,6 +42,11 @@ enum Commands {
 #[derive(Subcommand)]
 enum AccountCommands {
     List,
+}
+
+#[derive(Subcommand)]
+enum BatchCommands {
+    Run { file: String },
 }
 
 #[derive(Subcommand)]
@@ -55,13 +67,18 @@ enum TransactionCommands {
 }
 
 #[tokio::main]
-async fn main() -> monzo::Result<()> {
+async fn main() -> Result<()> {
     let args = CLI::parse();
 
     match args.cmd {
         Commands::Accounts { acc_cmd } => match acc_cmd {
             AccountCommands::List => {
                 accounts::list(&args.monzo_access_token).await?;
+            }
+        },
+        Commands::Batch { batch_cmd } => match batch_cmd {
+            BatchCommands::Run { file } => {
+                batch::run(args.monzo_access_token, file).await?;
             }
         },
         Commands::Pots { pot_cmd } => match pot_cmd {
