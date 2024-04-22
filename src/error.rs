@@ -11,4 +11,7 @@ pub enum Error {
 
     #[error("IO error: {0}")]
     IO(#[from] std::io::Error),
+
+    #[error("CSV error: {0}")]
+    CSV(#[from] csv::Error),
 }

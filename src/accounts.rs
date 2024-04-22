@@ -2,7 +2,7 @@ use monzo::Client;
 
 use crate::{currency, Result};
 
-#[derive(PartialEq, clap::ValueEnum, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, serde::Deserialize, clap::ValueEnum)]
 pub enum AccountType {
     Personal,
     Joint,
