@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use error::Result;
 
 mod accounts;
 mod batch;
@@ -7,6 +6,8 @@ mod currency;
 mod error;
 mod pots;
 mod transactions;
+
+pub use self::error::{Error, Result};
 
 #[derive(Parser)]
 #[command(name = "monzo")]

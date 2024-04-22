@@ -1,6 +1,6 @@
 use monzo::Client;
 
-use crate::currency;
+use crate::{currency, Result};
 
 #[derive(PartialEq, clap::ValueEnum, Clone, Copy)]
 pub enum AccountType {
@@ -20,7 +20,7 @@ impl AccountType {
 impl TryFrom<&monzo::accounts::Type> for AccountType {
     type Error = String;
 
-    fn try_from(value: &monzo::accounts::Type) -> Result<Self, Self::Error> {
+    fn try_from(value: &monzo::accounts::Type) -> std::result::Result<Self, Self::Error> {
         match value {
             monzo::accounts::Type::UkRetail => Ok(AccountType::Personal),
             monzo::accounts::Type::UkRetailJoint => Ok(AccountType::Joint),
@@ -45,9 +45,7 @@ fn print_balance_row(account_type: &str, account_no: &str, created: &str, balanc
     );
 }
 
-pub async fn get_supported_accounts(
-    token: &str,
-) -> monzo::Result<Vec<(AccountType, monzo::Account)>> {
+pub async fn get_supported_accounts(token: &str) -> Result<Vec<(AccountType, monzo::Account)>> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
@@ -64,7 +62,7 @@ pub async fn get_supported_accounts(
     Ok(supported_accounts)
 }
 
-pub async fn list(token: &str) -> monzo::Result<()> {
+pub async fn list(token: &str) -> Result<()> {
     let client = Client::new(token);
     let supported_accounts = get_supported_accounts(token).await?;
 

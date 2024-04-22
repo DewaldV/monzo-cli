@@ -2,6 +2,7 @@ use monzo::Client;
 
 use crate::accounts;
 use crate::currency;
+use crate::Result;
 
 fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, balance: &str) {
     println!(
@@ -10,7 +11,7 @@ fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, b
     );
 }
 
-pub async fn list(token: &str) -> monzo::Result<()> {
+pub async fn list(token: &str) -> Result<()> {
     let client = Client::new(token);
 
     let supported_accounts = accounts::get_supported_accounts(token).await?;
@@ -34,7 +35,7 @@ pub async fn list(token: &str) -> monzo::Result<()> {
     Ok(())
 }
 
-pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> monzo::Result<()> {
+pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> Result<()> {
     let pence = currency::parse_currency(amount).expect("should be an amount ex: 1,203.05");
 
     let client = Client::new(token);
@@ -61,7 +62,7 @@ pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> monzo::Result
     Ok(())
 }
 
-async fn find_pot(token: &str, name: &str) -> monzo::Result<Option<monzo::Pot>> {
+async fn find_pot(token: &str, name: &str) -> Result<Option<monzo::Pot>> {
     let client = Client::new(token);
 
     let supported_accounts = accounts::get_supported_accounts(token).await?;

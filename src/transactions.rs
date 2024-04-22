@@ -5,8 +5,9 @@ use monzo::Client;
 
 use crate::accounts;
 use crate::currency;
+use crate::Result;
 
-pub async fn list(token: &str, account_type: accounts::AccountType) -> monzo::Result<()> {
+pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
@@ -42,7 +43,7 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> monzo::Re
     Ok(())
 }
 
-pub async fn annotate(token: &str, transaction_id: &str, note: String) -> monzo::Result<()> {
+pub async fn annotate(token: &str, transaction_id: &str, note: String) -> Result<()> {
     let client = Client::new(token);
 
     let metadata = HashMap::from([(String::from("notes"), note)]);
