@@ -2,7 +2,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Unsupported Account Type")]
+    #[error("unsupported account type {account_type:?}")]
     UnsupportedAccountType { account_type: monzo::accounts::Type },
 
     // External
