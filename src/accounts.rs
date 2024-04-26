@@ -1,6 +1,6 @@
 use monzo::Client;
 
-use crate::{currency, Result};
+use crate::{currency::Amount, Result};
 
 #[derive(PartialEq, Debug, Clone, Copy, serde::Deserialize, clap::ValueEnum)]
 pub enum AccountType {
@@ -72,12 +72,12 @@ pub async fn list(token: &str) -> Result<()> {
     for (account_type, account) in supported_accounts {
         let created = account.created.format("%Y-%m-%d").to_string();
         let balance = client.balance(&account.id).await?;
-        let balance_value = currency::format_currency(balance.balance);
+        let balance_value = Amount::try_from(balance.balance)?;
         print_balance_row(
             &account_type.value(),
             &account.account_number,
             &created,
-            &balance_value,
+            &balance_value.to_string(),
         );
     }
 

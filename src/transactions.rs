@@ -4,7 +4,7 @@ use chrono::{prelude::*, Duration};
 use monzo::Client;
 
 use crate::accounts;
-use crate::currency;
+use crate::currency::Amount;
 use crate::Result;
 
 pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()> {
@@ -31,8 +31,8 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()
 
             for tx in transactions.iter() {
                 let created = &tx.created.format("%Y-%m-%d").to_string();
-                let amount = &currency::format_currency(tx.amount);
-                print_transaction_row(created, &tx.category, &tx.id, amount);
+                let amount = Amount::try_from(tx.amount)?;
+                print_transaction_row(created, &tx.category, &tx.id, &amount.to_string());
             }
         }
         None => {
@@ -55,10 +55,10 @@ pub async fn annotate(token: &str, transaction_id: &str, note: String) -> Result
     println!("Note added.");
     println!("");
     let created = &tx.created.format("%Y-%m-%d").to_string();
-    let amount = &currency::format_currency(tx.amount);
+    let amount = Amount::try_from(tx.amount)?;
     print_transaction_row("Created", "Category", "Note", "Amount");
     println!("-----------------------------------------------------------------------------------------------------------");
-    print_transaction_row(created, &tx.category, &tx.notes, amount);
+    print_transaction_row(created, &tx.category, &tx.notes, &amount.to_string());
 
     Ok(())
 }

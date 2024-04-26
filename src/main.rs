@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use currency::Amount;
 
 mod accounts;
 mod batch;
@@ -53,7 +54,7 @@ enum BatchCommands {
 #[derive(Subcommand)]
 enum PotsCommands {
     List { name: Option<String> },
-    Deposit { name: String, value: String },
+    Deposit { name: String, value: Amount },
 }
 
 #[derive(Subcommand)]

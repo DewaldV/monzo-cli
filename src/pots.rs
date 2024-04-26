@@ -1,7 +1,7 @@
 use monzo::Client;
 
 use crate::accounts;
-use crate::currency;
+use crate::currency::Amount;
 use crate::Result;
 
 fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, balance: &str) {
@@ -22,12 +22,12 @@ pub async fn list(token: &str) -> Result<()> {
         let pots = client.pots(&account.id).await?;
 
         for pot in pots.iter().filter(|pot| !pot.deleted) {
-            let balance_value = currency::format_currency(pot.balance);
+            let balance_value = Amount::try_from(pot.balance)?;
             print_pot_balance_row(
                 &account_type.value(),
                 &account.account_number,
                 &pot.name,
-                &balance_value,
+                &balance_value.to_string(),
             );
         }
     }
@@ -35,22 +35,17 @@ pub async fn list(token: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn deposit(token: &str, pot_name: &str, amount: &str) -> Result<()> {
-    let pence = currency::parse_currency(amount).expect("should be an amount ex: 1,203.05");
-
+pub async fn deposit(token: &str, pot_name: &str, amount: &Amount) -> Result<()> {
     let client = Client::new(token);
 
     let found_pot = find_pot(token, pot_name).await?;
 
     match found_pot {
         Some(pot) => {
-            println!(
-                "Found pot. Name: {}, Balance: {}",
-                pot.name,
-                currency::format_currency(pot.balance)
-            );
+            let balance = Amount::try_from(pot.balance)?;
+            println!("Found pot. Name: {}, Balance: {}", pot.name, balance,);
             client
-                .deposit_into_pot(&pot.id, &pot.current_account_id, pence)
+                .deposit_into_pot(&pot.id, &pot.current_account_id, amount.pence)
                 .await?;
             println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
         }
