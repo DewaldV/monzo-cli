@@ -4,13 +4,23 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Clone, Debug)]
+use serde::Deserialize;
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(try_from = "&str")]
 pub struct Amount {
     pub pence: u32,
 }
 
+impl From<u32> for Amount {
+    fn from(pence: u32) -> Self {
+        Amount { pence }
+    }
+}
+
 impl FromStr for Amount {
     type Err = ParseIntError;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let cleaned_s = s.replace(&['.', ','], "");
         let pence = cleaned_s.parse()?;
@@ -18,9 +28,11 @@ impl FromStr for Amount {
     }
 }
 
-impl From<u32> for Amount {
-    fn from(pence: u32) -> Self {
-        Amount { pence }
+impl TryFrom<&str> for Amount {
+    type Error = ParseIntError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Amount::from_str(value)
     }
 }
 

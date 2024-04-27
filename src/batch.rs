@@ -1,13 +1,13 @@
 use std::path::Path;
 
-use crate::{accounts, error::Result};
+use crate::{accounts, currency::Amount, error::Result};
 
 #[derive(Debug, serde::Deserialize)]
 struct Row {
     account: accounts::AccountType,
     category: String,
     description: String,
-    amount: u32,
+    amount: Amount,
 }
 
 pub async fn run(_token: String, file: String) -> Result<()> {
