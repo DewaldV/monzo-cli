@@ -35,12 +35,22 @@ pub async fn list(token: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn deposit(token: &str, pot_name: &str, amount: &Amount) -> Result<()> {
+pub async fn deposit(
+    token: &str,
+    pot_name: &str,
+    amount: &Amount,
+    description: Option<String>,
+) -> Result<()> {
     let client = Client::new(token);
 
     let found_pot = find_pot(token, pot_name).await?;
 
     match found_pot {
+        None => {
+            println!("No pot found with name: {}", pot_name);
+            return Ok(());
+        }
+
         Some(pot) => {
             let balance = Amount::try_from(pot.balance)?;
             println!("Found pot. Name: {}, Balance: {}", pot.name, balance,);
@@ -49,9 +59,11 @@ pub async fn deposit(token: &str, pot_name: &str, amount: &Amount) -> Result<()>
                 .await?;
             println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
         }
-        None => {
-            println!("No pot found with name: {}", pot_name);
-        }
+    }
+
+    if let Some(description) = description {
+        // find transaction
+        // annotate transaction
     }
 
     Ok(())

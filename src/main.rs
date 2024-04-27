@@ -53,8 +53,16 @@ enum BatchCommands {
 
 #[derive(Subcommand)]
 enum PotsCommands {
-    List { name: Option<String> },
-    Deposit { name: String, value: Amount },
+    List {
+        name: Option<String>,
+    },
+    Deposit {
+        name: String,
+        value: Amount,
+
+        #[arg(short, long)]
+        description: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -87,8 +95,12 @@ async fn main() -> Result<()> {
             PotsCommands::List { name: _ } => {
                 pots::list(&args.monzo_access_token).await?;
             }
-            PotsCommands::Deposit { name, value } => {
-                pots::deposit(&args.monzo_access_token, &name, &value).await?;
+            PotsCommands::Deposit {
+                name,
+                value,
+                description,
+            } => {
+                pots::deposit(&args.monzo_access_token, &name, &value, description).await?;
             }
         },
         Commands::Transactions { tx_cmd } => match tx_cmd {

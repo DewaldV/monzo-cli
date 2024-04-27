@@ -16,6 +16,11 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()
         .find(|acc| acc.account_type == account_type.into());
 
     match found_account {
+        None => {
+            println!("No account found for type: {}", account_type.value());
+            return Ok(());
+        }
+
         Some(acc) => {
             println!("Transactions for account: {}", account_type.value());
             println!("");
@@ -34,9 +39,6 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()
                 let amount = Amount::try_from(tx.amount)?;
                 print_transaction_row(created, &tx.category, &tx.id, &amount.to_string());
             }
-        }
-        None => {
-            println!("No account found for type: {}", account_type.value());
         }
     }
 
