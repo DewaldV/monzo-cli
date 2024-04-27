@@ -3,6 +3,7 @@ use monzo::Client;
 use crate::{currency::Amount, Result};
 
 #[derive(PartialEq, Debug, Clone, Copy, serde::Deserialize, clap::ValueEnum)]
+#[serde(rename_all = "lowercase")]
 pub enum AccountType {
     Personal,
     Joint,
