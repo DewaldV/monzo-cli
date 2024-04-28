@@ -7,7 +7,12 @@ use crate::accounts;
 use crate::currency::Amount;
 use crate::Result;
 
-pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()> {
+pub async fn list(
+    token: &str,
+    account_type: accounts::AccountType,
+    since: Option<DateTime<Utc>>,
+    limit: u16,
+) -> Result<()> {
     let client = Client::new(token);
 
     let accounts = client.accounts().await?;
@@ -27,16 +32,18 @@ pub async fn list(token: &str, account_type: accounts::AccountType) -> Result<()
             print_transaction_row("Created", "Category", "Description", "Amount");
             println!("-----------------------------------------------------------------------------------------------------------");
 
+            let since = since.unwrap_or(Utc::now() - Duration::days(1));
+
             let transactions = client
                 .transactions(&acc.id)
-                .since(Utc::now() - Duration::days(5))
-                .limit(10)
+                .since(since)
+                .limit(limit)
                 .send()
                 .await?;
 
             for tx in transactions.iter() {
                 let created = &tx.created.format("%Y-%m-%d").to_string();
-                let amount = Amount::try_from(tx.amount)?;
+                let amount = Amount::from(tx.amount);
                 print_transaction_row(created, &tx.category, &tx.id, &amount.to_string());
             }
         }
@@ -57,7 +64,7 @@ pub async fn annotate(token: &str, transaction_id: &str, note: String) -> Result
     println!("Note added.");
     println!("");
     let created = &tx.created.format("%Y-%m-%d").to_string();
-    let amount = Amount::try_from(tx.amount)?;
+    let amount = Amount::from(tx.amount);
     print_transaction_row("Created", "Category", "Note", "Amount");
     println!("-----------------------------------------------------------------------------------------------------------");
     print_transaction_row(created, &tx.category, &tx.notes, &amount.to_string());

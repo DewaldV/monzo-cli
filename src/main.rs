@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use currency::Amount;
 
@@ -69,6 +70,12 @@ enum PotsCommands {
 enum TransactionCommands {
     List {
         account_type: accounts::AccountType,
+
+        #[arg(short, long)]
+        since: Option<DateTime<Utc>>,
+
+        #[arg(short, long, default_value = "10")]
+        limit: u16,
     },
     UpdateNote {
         transaction_id: String,
@@ -104,8 +111,12 @@ async fn main() -> Result<()> {
             }
         },
         Commands::Transactions { tx_cmd } => match tx_cmd {
-            TransactionCommands::List { account_type } => {
-                transactions::list(&args.monzo_access_token, account_type).await?;
+            TransactionCommands::List {
+                account_type,
+                since,
+                limit,
+            } => {
+                transactions::list(&args.monzo_access_token, account_type, since, limit).await?;
             }
             TransactionCommands::UpdateNote {
                 transaction_id,

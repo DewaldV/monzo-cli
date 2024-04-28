@@ -9,11 +9,11 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Deserialize)]
 #[serde(try_from = "&str")]
 pub struct Amount {
-    pub pence: u32,
+    pub pence: i64,
 }
 
-impl From<u32> for Amount {
-    fn from(pence: u32) -> Self {
+impl From<i64> for Amount {
+    fn from(pence: i64) -> Self {
         Amount { pence }
     }
 }
@@ -36,12 +36,11 @@ impl TryFrom<&str> for Amount {
     }
 }
 
-impl TryFrom<i64> for Amount {
+impl TryInto<u32> for Amount {
     type Error = TryFromIntError;
 
-    fn try_from(value: i64) -> Result<Self, Self::Error> {
-        let pence = u32::try_from(value)?;
-        Ok(Amount { pence })
+    fn try_into(self) -> Result<u32, Self::Error> {
+        self.pence.try_into()
     }
 }
 
@@ -69,13 +68,14 @@ impl Display for Amount {
 
 #[cfg(test)]
 mod test {
+
     use super::*;
 
     #[test]
     fn format_currency_decimals() {
         let pence = 890;
 
-        let value = Amount::from(pence).to_string();
+        let value = Amount { pence }.to_string();
 
         assert_eq!(value, "8.90")
     }
@@ -89,7 +89,7 @@ mod test {
         ];
 
         for (pence, expected) in cases {
-            let value = Amount::from(pence).to_string();
+            let value = Amount { pence }.to_string();
 
             assert_eq!(value, expected);
         }
@@ -99,7 +99,7 @@ mod test {
     fn parse_currency_decimals() {
         let pence = "10.05";
 
-        let value = Amount::from_str(pence)
+        let value = Amount::try_from(pence)
             .expect("must parse fixed value")
             .pence;
 
@@ -110,7 +110,7 @@ mod test {
     fn parse_currency_separators() {
         let pence = "1,010.05";
 
-        let value = Amount::from_str(pence)
+        let value = Amount::try_from(pence)
             .expect("must parse fixed value")
             .pence;
 
@@ -118,11 +118,20 @@ mod test {
     }
 
     #[test]
-    fn try_from_i64() {
+    fn from_i64() {
         let pence: i64 = 953578513525;
 
-        let value = Amount::try_from(pence);
+        let value = Amount::from(pence);
 
-        assert_eq!(value.is_err(), true);
+        assert_eq!(value.pence, pence);
+    }
+
+    #[test]
+    fn try_into_u32() {
+        let pence = 1024;
+
+        let res: Result<u32, _> = Amount { pence }.try_into();
+
+        assert_eq!(res.is_ok(), true);
     }
 }

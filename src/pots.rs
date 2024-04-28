@@ -22,7 +22,7 @@ pub async fn list(token: &str) -> Result<()> {
         let pots = client.pots(&account.id).await?;
 
         for pot in pots.iter().filter(|pot| !pot.deleted) {
-            let balance_value = Amount::try_from(pot.balance)?;
+            let balance_value = Amount::from(pot.balance);
             print_pot_balance_row(
                 &account_type.value(),
                 &account.account_number,
@@ -52,16 +52,18 @@ pub async fn deposit(
         }
 
         Some(pot) => {
-            let balance = Amount::try_from(pot.balance)?;
+            let balance = Amount::from(pot.balance);
             println!("Found pot. Name: {}, Balance: {}", pot.name, balance,);
+
+            let amount_i: u32 = amount.pence.try_into()?;
             client
-                .deposit_into_pot(&pot.id, &pot.current_account_id, amount.pence)
+                .deposit_into_pot(&pot.id, &pot.current_account_id, amount_i)
                 .await?;
             println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
         }
     }
 
-    if let Some(description) = description {
+    if let Some(_description) = description {
         // find transaction
         // annotate transaction
     }

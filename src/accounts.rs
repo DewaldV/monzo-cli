@@ -73,7 +73,7 @@ pub async fn list(token: &str) -> Result<()> {
     for (account_type, account) in supported_accounts {
         let created = account.created.format("%Y-%m-%d").to_string();
         let balance = client.balance(&account.id).await?;
-        let balance_value = Amount::try_from(balance.balance)?;
+        let balance_value = Amount::from(balance.balance);
         print_balance_row(
             &account_type.value(),
             &account.account_number,

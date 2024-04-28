@@ -23,7 +23,7 @@ impl Display for Row {
     }
 }
 
-pub async fn run(token: String, file: String) -> Result<()> {
+pub async fn run(_token: String, file: String) -> Result<()> {
     let path = Path::new(&file);
     println!("starting batch run for file: {}", path.display());
 
