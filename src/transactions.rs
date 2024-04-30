@@ -45,6 +45,7 @@ pub async fn list(
                 let created = &tx.created.format("%Y-%m-%d").to_string();
                 let amount = Amount::from(tx.amount);
                 print_transaction_row(created, &tx.category, &tx.id, &amount.to_string());
+                dbg!(tx);
             }
         }
     }

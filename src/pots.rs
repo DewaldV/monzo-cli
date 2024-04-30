@@ -1,3 +1,4 @@
+use chrono::{Duration, Utc};
 use monzo::Client;
 
 use crate::accounts;
@@ -45,27 +46,51 @@ pub async fn deposit(
 
     let found_pot = find_pot(token, pot_name).await?;
 
-    match found_pot {
-        None => {
-            println!("No pot found with name: {}", pot_name);
-            return Ok(());
-        }
-
-        Some(pot) => {
-            let balance = Amount::from(pot.balance);
-            println!("Found pot. Name: {}, Balance: {}", pot.name, balance,);
-
-            let amount_i: u32 = amount.pence.try_into()?;
-            client
-                .deposit_into_pot(&pot.id, &pot.current_account_id, amount_i)
-                .await?;
-            println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
-        }
+    if found_pot.is_none() {
+        println!("No pot found with name: {}", pot_name);
+        return Ok(());
     }
 
-    if let Some(_description) = description {
-        // find transaction
-        // annotate transaction
+    let pot = found_pot.expect("none checked above so this is safe");
+
+    let balance = Amount::from(pot.balance);
+    println!("Found pot. Name: {}, Balance: {}", pot.name, balance);
+
+    let amount_i: u32 = amount.pence.try_into()?;
+    client
+        .deposit_into_pot(&pot.id, &pot.current_account_id, amount_i)
+        .await?;
+    println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
+
+    if let Some(description) = description {
+        let since = Utc::now() - Duration::minutes(5);
+        let limit = 10;
+
+        let transactions = client
+            .transactions(&pot.current_account_id)
+            .since(since)
+            .limit(limit)
+            .send()
+            .await?;
+
+        // transactions
+        //     .iter()
+        //     .filter(|tx| tx.metadata.contains_key("pot_id"))
+        //     .find(|tx| tx.metadata.get(k));
+
+        // metadata: {
+        //     "ledger_committed_timestamp_earliest": "2024-04-26T21:17:37.867Z",
+        //     "pot_deposit_id": "potdep_0000AhIBZeZKQxtcO5qKSv",
+        //     "ledger_insertion_id": "entryset_0000AhIBZeQSxvHj6Dcsy1",
+        //     "user_id": "user_00009HutzjJh6uIxmYfk6z",
+        //     "external_id": "user_00009HutzjJh6uIxmYfk6z:VG5PeJCYVY",
+        //     "pot_account_id": "acc_0000AgbkY0OhRmP0ooPx69",
+        //     "trigger": "user",
+        //     "ledger_committed_timestamp_latest": "2024-04-26T21:17:37.867Z",
+        //     "pot_id": "pot_0000AgbkY00Euhtjk7z0td",
+        // },
+        // let tx_list = transactions::list(token, account_type, since, limit).await?;
+        // transactions::annotate(token, transaction_id, description).await?
     }
 
     Ok(())
