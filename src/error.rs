@@ -5,6 +5,9 @@ pub enum Error {
     #[error("unsupported account type {account_type:?}")]
     UnsupportedAccountType { account_type: monzo::accounts::Type },
 
+    #[error("no pot found with name={pot_name}")]
+    PotNotFound { pot_name: String },
+
     // External
     #[error("Monzo API error: {0}")]
     MonzoAPI(#[from] monzo::Error),

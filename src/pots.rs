@@ -1,9 +1,9 @@
 use chrono::{Duration, Utc};
 use monzo::Client;
 
-use crate::accounts;
 use crate::currency::Amount;
-use crate::Result;
+use crate::{accounts, transactions};
+use crate::{Error, Result};
 
 fn print_pot_balance_row(account_type: &str, account_no: &str, pot_name: &str, balance: &str) {
     println!(
@@ -45,16 +45,15 @@ pub async fn deposit(
     let client = Client::new(token);
 
     let found_pot = find_pot(token, pot_name).await?;
+    let pot = found_pot.ok_or(Error::PotNotFound {
+        pot_name: String::from(pot_name),
+    })?;
 
-    if found_pot.is_none() {
-        println!("No pot found with name: {}", pot_name);
-        return Ok(());
-    }
-
-    let pot = found_pot.expect("none checked above so this is safe");
-
-    let balance = Amount::from(pot.balance);
-    println!("Found pot. Name: {}, Balance: {}", pot.name, balance);
+    println!(
+        "Found pot. Name: {}, Balance: {}",
+        pot.name,
+        Amount::from(pot.balance)
+    );
 
     let amount_i: u32 = amount.pence.try_into()?;
     client
@@ -63,7 +62,7 @@ pub async fn deposit(
     println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
 
     if let Some(description) = description {
-        let since = Utc::now() - Duration::minutes(5);
+        let since = Utc::now() - Duration::minutes(2);
         let limit = 10;
 
         let transactions = client
@@ -73,10 +72,32 @@ pub async fn deposit(
             .send()
             .await?;
 
-        // transactions
-        //     .iter()
-        //     .filter(|tx| tx.metadata.contains_key("pot_id"))
-        //     .find(|tx| tx.metadata.get(k));
+        // Look for the pot deposit.
+        // If it's a transaction to the target pot with an exact matching amount
+        // then it should be ours.
+        let pot_tx: Vec<&monzo::Transaction> = transactions
+            .iter()
+            .filter(|tx| {
+                tx.metadata
+                    .get("pot_id")
+                    .is_some_and(|pot_id| pot_id == &pot.id)
+            })
+            .filter(|tx| tx.amount.abs() == amount.pence)
+            .collect();
+
+        if pot_tx.len() != 1 {
+            println!(
+                "Unable to find a matching transaction to annotate. len(tx)={}",
+                pot_tx.len()
+            );
+            return Ok(());
+        }
+
+        let tx = pot_tx
+            .first()
+            .expect("length is checked above so this is always safe");
+
+        transactions::annotate(token, &tx.id, description).await?;
 
         // metadata: {
         //     "ledger_committed_timestamp_earliest": "2024-04-26T21:17:37.867Z",
@@ -89,8 +110,6 @@ pub async fn deposit(
         //     "ledger_committed_timestamp_latest": "2024-04-26T21:17:37.867Z",
         //     "pot_id": "pot_0000AgbkY00Euhtjk7z0td",
         // },
-        // let tx_list = transactions::list(token, account_type, since, limit).await?;
-        // transactions::annotate(token, transaction_id, description).await?
     }
 
     Ok(())
