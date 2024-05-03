@@ -8,6 +8,9 @@ pub enum Error {
     #[error("no pot found with name={pot_name}")]
     PotNotFound { pot_name: String },
 
+    #[error("deposit transactions not found, unable to annotate")]
+    DepositTransactionNotFound,
+
     // External
     #[error("Monzo API error: {0}")]
     MonzoAPI(#[from] monzo::Error),

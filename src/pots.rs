@@ -62,7 +62,7 @@ pub async fn deposit(
     println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
 
     if let Some(description) = description {
-        let since = Utc::now() - Duration::minutes(2);
+        let since = Utc::now() - Duration::minutes(1);
         let limit = 10;
 
         let transactions = client
@@ -75,41 +75,17 @@ pub async fn deposit(
         // Look for the pot deposit.
         // If it's a transaction to the target pot with an exact matching amount
         // then it should be ours.
-        let pot_tx: Vec<&monzo::Transaction> = transactions
+        let pot_tx = transactions
             .iter()
             .filter(|tx| {
                 tx.metadata
                     .get("pot_id")
                     .is_some_and(|pot_id| pot_id == &pot.id)
             })
-            .filter(|tx| tx.amount.abs() == amount.pence)
-            .collect();
+            .find(|tx| tx.amount.abs() == amount.pence)
+            .ok_or(Error::DepositTransactionNotFound)?;
 
-        if pot_tx.len() != 1 {
-            println!(
-                "Unable to find a matching transaction to annotate. len(tx)={}",
-                pot_tx.len()
-            );
-            return Ok(());
-        }
-
-        let tx = pot_tx
-            .first()
-            .expect("length is checked above so this is always safe");
-
-        transactions::annotate(token, &tx.id, description).await?;
-
-        // metadata: {
-        //     "ledger_committed_timestamp_earliest": "2024-04-26T21:17:37.867Z",
-        //     "pot_deposit_id": "potdep_0000AhIBZeZKQxtcO5qKSv",
-        //     "ledger_insertion_id": "entryset_0000AhIBZeQSxvHj6Dcsy1",
-        //     "user_id": "user_00009HutzjJh6uIxmYfk6z",
-        //     "external_id": "user_00009HutzjJh6uIxmYfk6z:VG5PeJCYVY",
-        //     "pot_account_id": "acc_0000AgbkY0OhRmP0ooPx69",
-        //     "trigger": "user",
-        //     "ledger_committed_timestamp_latest": "2024-04-26T21:17:37.867Z",
-        //     "pot_id": "pot_0000AgbkY00Euhtjk7z0td",
-        // },
+        transactions::annotate(token, &pot_tx.id, description).await?;
     }
 
     Ok(())

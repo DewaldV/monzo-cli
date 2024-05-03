@@ -41,11 +41,13 @@ pub async fn list(
                 .send()
                 .await?;
 
+            let default_description = String::from("No note");
+
             for tx in transactions.iter() {
                 let created = &tx.created.format("%Y-%m-%d").to_string();
+                let description = &tx.metadata.get("notes").unwrap_or(&default_description);
                 let amount = Amount::from(tx.amount);
-                print_transaction_row(created, &tx.category, &tx.id, &amount.to_string());
-                dbg!(tx);
+                print_transaction_row(created, &tx.category, &description, &amount.to_string());
             }
         }
     }
