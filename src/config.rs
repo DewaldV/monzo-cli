@@ -13,10 +13,10 @@ struct Destination {
     pot_name: String,
 }
 
-// [destinations.personal]
-// account = "998877665"
+// [[destinations]]
 // source = "personal"
+// pot_name = "personal-test-pot"
 
-// [destinations.joint]
-// account = "112233445"
+// [[destinations]]
 // source = "joint"
+// pot_name = "joint-test-pot"
