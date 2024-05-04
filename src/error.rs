@@ -23,4 +23,7 @@ pub enum Error {
 
     #[error("CSV error: {0}")]
     CSV(#[from] csv::Error),
+
+    #[error("TOML error: {0}")]
+    TOML(#[from] toml::de::Error),
 }

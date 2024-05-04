@@ -1,5 +1,6 @@
 use chrono::{Duration, Utc};
-use monzo::Client;
+use monzo::{Client, Pot, Transaction};
+use tokio::time::sleep;
 
 use crate::currency::Amount;
 use crate::{accounts, transactions};
@@ -62,33 +63,56 @@ pub async fn deposit(
     println!("Completed deposit. Name: {}, Amount: {}", pot.name, amount);
 
     if let Some(description) = description {
-        let since = Utc::now() - Duration::minutes(1);
-        let limit = 10;
+        let retry_max = 4;
+        let retry_wait = tokio::time::Duration::from_millis(200);
+        let mut attempt = 1;
 
-        let transactions = client
-            .transactions(&pot.current_account_id)
-            .since(since)
-            .limit(limit)
-            .send()
-            .await?;
-
-        // Look for the pot deposit.
-        // If it's a transaction to the target pot with an exact matching amount
-        // then it should be ours.
-        let pot_tx = transactions
-            .iter()
-            .filter(|tx| {
-                tx.metadata
-                    .get("pot_id")
-                    .is_some_and(|pot_id| pot_id == &pot.id)
-            })
-            .find(|tx| tx.amount.abs() == amount.pence)
-            .ok_or(Error::DepositTransactionNotFound)?;
+        let pot_tx = loop {
+            match find_deposit(token, &pot, amount).await {
+                Ok(pot_tx) => {
+                    break pot_tx;
+                }
+                Err(e) => {
+                    if attempt >= retry_max {
+                        return Err(e);
+                    }
+                    attempt += 1;
+                    sleep(retry_wait).await;
+                }
+            }
+        };
 
         transactions::annotate(token, &pot_tx.id, description).await?;
     }
 
     Ok(())
+}
+
+async fn find_deposit(token: &str, pot: &Pot, amount: &Amount) -> Result<Transaction> {
+    let client = Client::new(token);
+    let since = Utc::now() - Duration::minutes(1);
+    let limit = 10;
+
+    let transactions = client
+        .transactions(&pot.current_account_id)
+        .since(since)
+        .limit(limit)
+        .send()
+        .await?;
+
+    // Look for the pot deposit.
+    // If it's a transaction to the target pot with an exact matching amount
+    // then it should be ours.
+    transactions
+        .iter()
+        .filter(|tx| {
+            tx.metadata
+                .get("pot_id")
+                .is_some_and(|pot_id| pot_id == &pot.id)
+        })
+        .find(|tx| tx.amount.abs() == amount.pence)
+        .ok_or(Error::DepositTransactionNotFound)
+        .cloned()
 }
 
 async fn find_pot(token: &str, name: &str) -> Result<Option<monzo::Pot>> {

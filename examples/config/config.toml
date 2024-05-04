@@ -1,0 +1,7 @@
+[[destinations]]
+source = "personal"
+pot_name = "test-pot"
+
+[[destinations]]
+source = "joint"
+pot_name = "joint-test-pot"

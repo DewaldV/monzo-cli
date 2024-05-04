@@ -4,6 +4,7 @@ use currency::Amount;
 
 mod accounts;
 mod batch;
+mod config;
 mod currency;
 mod error;
 mod pots;
@@ -49,7 +50,12 @@ enum AccountCommands {
 
 #[derive(Subcommand)]
 enum BatchCommands {
-    Run { file: String },
+    Run {
+        batch_file: String,
+
+        #[clap(short, long)]
+        config_file: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -94,8 +100,11 @@ async fn main() -> Result<()> {
             }
         },
         Commands::Batch { batch_cmd } => match batch_cmd {
-            BatchCommands::Run { file } => {
-                batch::run(args.monzo_access_token, file).await?;
+            BatchCommands::Run {
+                batch_file,
+                config_file,
+            } => {
+                batch::run(args.monzo_access_token, batch_file, config_file).await?;
             }
         },
         Commands::Pots { pot_cmd } => match pot_cmd {
