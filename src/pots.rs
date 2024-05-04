@@ -91,7 +91,7 @@ pub async fn deposit(
 async fn find_deposit(token: &str, pot: &Pot, amount: &Amount) -> Result<Transaction> {
     let client = Client::new(token);
     let since = Utc::now() - Duration::minutes(1);
-    let limit = 10;
+    let limit = 100;
 
     let transactions = client
         .transactions(&pot.current_account_id)
@@ -100,17 +100,19 @@ async fn find_deposit(token: &str, pot: &Pot, amount: &Amount) -> Result<Transac
         .send()
         .await?;
 
-    // Look for the pot deposit.
-    // If it's a transaction to the target pot with an exact matching amount
-    // then it should be ours.
+    // Look for the pot deposit in the transaction list:
+    // - It should be to the target pot
+    // - It should have no existing notes set
+    // - It should have a matching amount
     transactions
         .iter()
-        .filter(|tx| {
+        .find(|tx| {
             tx.metadata
                 .get("pot_id")
                 .is_some_and(|pot_id| pot_id == &pot.id)
+                && tx.metadata.get("notes").is_none()
+                && tx.amount.abs() == amount.pence
         })
-        .find(|tx| tx.amount.abs() == amount.pence)
         .ok_or(Error::DepositTransactionNotFound)
         .cloned()
 }
