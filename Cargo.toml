@@ -1,13 +1,13 @@
 [package]
-name = "finops-monzo"
+name = "monzo-cli"
 version = "0.1.0"
 authors = ["Dewald Viljoen <dv@dewaldv.com>"]
 edition = "2021"
 description = "Monzo CLI for automating finance bits."
 readme = "README.md"
 keywords = ["monzo", "mondo", "async", "finops"]
-homepage = "https://github.com/dewaldv/finops-monzo"
-repository = "https://github.com/dewaldv/finops-monzo"
+homepage = "https://github.com/dewaldv/monzo-cli"
+repository = "https://github.com/dewaldv/monzo-cli"
 license = "MIT"
 
 [lints.rust]

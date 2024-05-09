@@ -282,20 +282,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "658bd65b1cf4c852a3cc96f18a8ce7b5640f6b703f905c7d74532294c2a63984"
 
 [[package]]
-name = "finops-monzo"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "csv",
- "monzo-lib",
- "serde",
- "thiserror",
- "tokio",
- "toml",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -632,6 +618,20 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "monzo-cli"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "csv",
+ "monzo-lib",
+ "serde",
+ "thiserror",
+ "tokio",
+ "toml",
 ]
 
 [[package]]
