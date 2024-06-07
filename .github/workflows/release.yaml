@@ -1,15 +1,14 @@
-name: Cargo Build & Test
+name: Cargo Build & Release
 
 on:
-  push:
-  pull_request:
+  tag:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
-    name: Rust Build
+  build:
+    name: Rust Build & Release
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +18,6 @@ jobs:
       uses: JRMurr/direnv-nix-action@v4.1.0
 
     - name: "Build"
-      run: cargo build --verbose
+      run: cargo build --release
 
-    - name: "Test"
-      run: cargo test --verbose
+    - name: "Upload package"

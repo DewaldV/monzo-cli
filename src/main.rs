@@ -7,6 +7,7 @@ mod batch;
 mod config;
 mod currency;
 mod error;
+mod parsers;
 mod pots;
 mod transactions;
 
@@ -55,6 +56,9 @@ enum BatchCommands {
 
         #[clap(short, long)]
         config_file: String,
+    },
+    VCC {
+        batch_file: String,
     },
 }
 
@@ -105,6 +109,9 @@ async fn main() -> Result<()> {
                 config_file,
             } => {
                 batch::run(args.monzo_access_token, batch_file, config_file).await?;
+            }
+            BatchCommands::VCC { batch_file } => {
+                parsers::virgin::run(batch_file).await?;
             }
         },
         Commands::Pots { pot_cmd } => match pot_cmd {
