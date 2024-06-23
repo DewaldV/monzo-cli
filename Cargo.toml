@@ -17,6 +17,7 @@ unsafe_code = "forbid"
 chrono = { version = "0.4.37", features = ["serde"] }
 clap = { version = "4.5.3", features = ["derive", "env"] }
 csv = "1.3.0"
+itertools = "0.13.0"
 # monzo-lib = "0.4.4"
 monzo-lib = { git = "https://github.com/DewaldV/monzo-lib.git" }
 serde = "1.0.198"

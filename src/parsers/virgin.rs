@@ -1,5 +1,4 @@
-// Transaction Date,Posting Date,Billing Amount,Merchant,Merchant City,Merchant State,Merchant Postcode,Reference Number,Debit or Credit,SICMCC Code,Status,Transaction Currency,Additional Card Holder,Card Used
-
+use itertools::Itertools;
 use std::{fs, path::Path};
 
 use crate::{currency::Amount, Result};
@@ -61,48 +60,47 @@ struct Row {
     card_used: String,
 }
 
+const MERCHANT_FIELD_NO: usize = 3;
 const NO_OF_FIELDS: usize = 14;
-const NO_OF_FIELDS_AFTER_MERCHANT: usize = 10;
-const MERCHANT_FIELD_IDX: usize = 3;
 
+#[allow(unstable_name_collisions)]
 pub async fn run(batch_file: String) -> Result<()> {
     let batch_path = Path::new(&batch_file);
     let csv_content = fs::read_to_string(batch_path)?;
 
-    for line in csv_content.lines() {
-        let mut fields: Vec<&str> = line.split(",").collect();
-        if fields.len() > NO_OF_FIELDS {
-            println!("bad row found, correcting. line='{}'", line);
+    let lines: String = csv_content
+        .lines()
+        .map(|line| clean_line(line))
+        .intersperse(String::from("\n"))
+        .collect();
 
-            let no_of_additional_fields = fields.len() - NO_OF_FIELDS;
-            println!("no_of_additional_fields={}", no_of_additional_fields);
-
-            let first_fields: Vec<&str> = fields.drain(0..2).collect();
-            let merchant_field = fields
-                .drain(0..no_of_additional_fields)
-                .collect::<Vec<&str>>()
-                .join(" ");
-
-            let new_line = first_fields
-                .into_iter()
-                .chain(merchant_field.into_iter())
-                .chain(fields.into_iter());
-
-            // 0,1,2
-            // Rebuild field 3
-            // Slice 3..<no_of_bad_fields>
-            // Find the last bad field = len() - 10
-        }
+    let mut reader = csv::Reader::from_reader(lines.as_bytes());
+    for result in reader.deserialize() {
+        let row: Row = result?;
     }
 
-    // let csv_lines Vec<Split<String>> = csv_content.lines().map(|l| l.split(",")).collect();
-    // let bad_lines = csv_lines.filter(|l| l.len() > 14);
-
-    // let mut reader = csv::Reader::from_path(batch_path)?;
-    // for result in reader.deserialize() {
-    //     let row: Row = result?;
-    //     dbg!(row);
-    // }
-
     Ok(())
+}
+
+#[allow(unstable_name_collisions)]
+fn clean_line(line: &str) -> String {
+    let mut fields: Vec<&str> = line.split(",").collect();
+    if fields.len() > NO_OF_FIELDS {
+        println!("bad row found, correcting. line='{}'", line);
+    }
+
+    let no_of_additional_fields = fields.len() - NO_OF_FIELDS;
+    let mut first_fields: Vec<&str> = fields.drain(0..MERCHANT_FIELD_NO).collect();
+    let merchant_field: String = fields
+        .drain(0..no_of_additional_fields + 1)
+        .intersperse(" ")
+        .collect();
+
+    first_fields.push(&merchant_field);
+
+    first_fields
+        .into_iter()
+        .chain(fields.into_iter())
+        .intersperse(",")
+        .collect()
 }
