@@ -53,7 +53,7 @@ impl Display for Amount {
                 out.push('.');
             }
 
-            if i > 2 && (i - 2) % 3 == 0 {
+            if i > 2 && (i - 2) % 3 == 0 && c != '-' {
                 out.push(',');
             }
 
@@ -86,6 +86,21 @@ mod test {
             (12345, "123.45"),
             (654321, "6,543.21"),
             (500000035, "5,000,000.35"),
+        ];
+
+        for (pence, expected) in cases {
+            let value = Amount { pence }.to_string();
+
+            assert_eq!(value, expected);
+        }
+    }
+
+    #[test]
+    fn format_negative_currency_separators() {
+        let cases = [
+            (-12345, "-123.45"),
+            (-654321, "-6,543.21"),
+            (-50000035, "-500,000.35"),
         ];
 
         for (pence, expected) in cases {
