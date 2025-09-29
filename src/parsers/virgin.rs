@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use std::{fs, path::Path};
 
@@ -17,11 +18,11 @@ enum Status {
 
 #[derive(Debug, serde::Deserialize)]
 struct Row {
-    #[serde(rename = "Transaction Date")]
-    transaction_date: String,
+    #[serde(rename = "Transaction Date", with = "virgin_date_format")]
+    transaction_date: DateTime<Utc>,
 
-    #[serde(rename = "Posting Date")]
-    posting_date: String,
+    #[serde(rename = "Posting Date", with = "virgin_date_format")]
+    posting_date: DateTime<Utc>,
 
     #[serde(rename = "Billing Amount")]
     billing_amount: Amount,
@@ -63,26 +64,20 @@ struct Row {
 const MERCHANT_FIELD_NO: usize = 3;
 const NO_OF_FIELDS: usize = 14;
 
-#[allow(unstable_name_collisions)]
 pub async fn run(batch_file: String) -> Result<()> {
     let batch_path = Path::new(&batch_file);
     let csv_content = fs::read_to_string(batch_path)?;
 
-    let lines: String = csv_content
-        .lines()
-        .map(|line| clean_line(line))
-        .intersperse(String::from("\n"))
-        .collect();
+    let lines: String = csv_content.lines().map(|line| clean_line(line)).join("\n");
 
     let mut reader = csv::Reader::from_reader(lines.as_bytes());
     for result in reader.deserialize() {
-        let row: Row = result?;
+        let _row: Row = result?;
     }
 
     Ok(())
 }
 
-#[allow(unstable_name_collisions)]
 fn clean_line(line: &str) -> String {
     let mut fields: Vec<&str> = line.split(",").collect();
     if fields.len() > NO_OF_FIELDS {
@@ -91,16 +86,33 @@ fn clean_line(line: &str) -> String {
 
     let no_of_additional_fields = fields.len() - NO_OF_FIELDS;
     let mut first_fields: Vec<&str> = fields.drain(0..MERCHANT_FIELD_NO).collect();
-    let merchant_field: String = fields
-        .drain(0..no_of_additional_fields + 1)
-        .intersperse(" ")
-        .collect();
+    let merchant_field: String = fields.drain(0..no_of_additional_fields + 1).join(" ");
 
     first_fields.push(&merchant_field);
 
-    first_fields
-        .into_iter()
-        .chain(fields.into_iter())
-        .intersperse(",")
-        .collect()
+    first_fields.into_iter().chain(fields.into_iter()).join(",")
+}
+
+mod virgin_date_format {
+    use chrono::{DateTime, NaiveDateTime, Utc};
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d";
+
+    pub fn serialize<S>(date: &DateTime<Utc>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{}", date.format(FORMAT));
+        serializer.serialize_str(&s)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
+        Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+    }
 }
