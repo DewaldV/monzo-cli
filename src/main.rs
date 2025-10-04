@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use clap::{Parser, Subcommand};
 use currency::Amount;
 
@@ -59,6 +59,8 @@ enum BatchCommands {
     },
     VCC {
         batch_file: String,
+        filter_date: NaiveDate,
+        output_file: String,
     },
 }
 
@@ -110,8 +112,12 @@ async fn main() -> Result<()> {
             } => {
                 batch::run(args.monzo_access_token, batch_file, config_file).await?;
             }
-            BatchCommands::VCC { batch_file } => {
-                parsers::virgin::run(batch_file).await?;
+            BatchCommands::VCC {
+                batch_file,
+                filter_date,
+                output_file,
+            } => {
+                parsers::virgin::parser::run(batch_file, filter_date, output_file).await?;
             }
         },
         Commands::Pots { pot_cmd } => match pot_cmd {

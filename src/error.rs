@@ -11,6 +11,9 @@ pub enum Error {
     #[error("deposit transactions not found, unable to annotate")]
     DepositTransactionNotFound,
 
+    #[error("CSV parsing error: {0}")]
+    CSVParseError(String),
+
     // External
     #[error("Monzo API error: {0}")]
     MonzoAPI(#[from] monzo::Error),
