@@ -2,7 +2,7 @@
 name = "monzo-cli"
 version = "0.1.0"
 authors = ["Dewald Viljoen <dv@dewaldv.com>"]
-edition = "2021"
+edition = "2024"
 description = "Monzo CLI for automating finance bits."
 readme = "README.md"
 keywords = ["monzo", "mondo", "async", "finops"]
