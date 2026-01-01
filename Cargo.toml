@@ -22,6 +22,5 @@ itertools = "0.13.0"
 monzo-lib = { git = "https://github.com/DewaldV/monzo-lib.git" }
 serde = "1.0.198"
 thiserror = "1.0.58"
-# monzo-lib = { path = "../monzo-lib" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.12"
